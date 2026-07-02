@@ -1,90 +1,113 @@
-# Vedaz Real-Time Chat Application - Requirements Spec
+# Vedaz Real-Time Chat Application
 
-This document details the objective, features, and guidelines for building the real-time chat application.
-
----
-
-## 📋 Objective
-
-Build a real-time chat application using **React Native** (preferred) or **React** for the frontend, and **Node.js** + **Express** + **Socket.io** for the backend.
+Welcome to Vedaz Chat! This repository houses the codebase for a high-performance, responsive real-time chat application powered by standard monorepo workspaces.
 
 ---
 
-## 1. Frontend Requirements (Web/Mobile)
+## 1. Techstack
 
-- **Framework**: React Native (preferred) or React (e.g., Next.js).
-- **UI/UX**: Create a clean, modern, and user-friendly chat interface.
-- **Core Features**:
-  - Send messages to other users.
-  - Receive messages instantly (real-time).
-  - Persist and view chat history (messages should persist after refreshing).
-  - Display timestamps for all messages.
+### Frontend
 
----
+- **Framework**: React 19 (via Vite)
+- **Styling**: Tailwind CSS v4 & Shadcn UI (optimized with vanilla HSL custom property styling and custom transitions)
+- **Routing**: React Router v7
+- **State & Data Fetching**: TanStack React Query v5 & Axios
+- **Real-Time Client**: Socket.io Client
+- **Authentication Wrapper**: Better Auth Client (Google Social Login integration)
 
-## 2. Backend & Real-Time Communication
+### Backend
 
-### REST APIs
+- **Framework**: Node.js & Express
+- **Real-Time Server**: Socket.io (managing online/offline list sync and direct message broadcasting)
+- **Database Layer**: Neon Serverless PostgreSQL with Drizzle ORM
+- **Authentication**: Better Auth (Google OAuth 2.0 flow middleware)
 
-The backend must implement the following endpoints:
+### Infrastructure
 
-- **Send Message**: API to receive and store a new message.
-- **Fetch History**: API to retrieve the historical list of messages.
-
-### Socket.io Integration
-
-- **Real-time Delivery**: Deliver messages instantly without requiring a page refresh or polling.
-- **Broadcasting**: Broadcast incoming messages to all connected users in real time.
-- **Connection Lifecycle**: Gracefully handle user connections and disconnections.
-
-> [!IMPORTANT]
-> The use of **Socket.io** is mandatory. Alternative approaches such as polling, Firebase, or other third-party services will not be accepted.
+- **Monorepo Manager**: `pnpm` workspaces
 
 ---
 
-## 3. Code Quality & Architecture
+## 2. How to Start Frontend
 
-- **Organization**: Structure the codebase logically with a meaningful folder hierarchy.
-- **Best Practices**: Follow clean architecture patterns and implement reusable code/components.
-- **Resilience**: Handle API errors and Socket connection failures gracefully.
-- **Maintainability**: Ensure code is clean, readable, and easily maintainable.
+1. Ensure dependencies are installed from the root workspace directory:
 
----
+   ```bash
+   pnpm install
+   ```
 
-## 4. Documentation (README.md)
+2. Populate the environment variables:
+   Create a `.env` file in `apps/web/` using the template below (see Section 4).
 
-The repository must contain a comprehensive README that includes:
+3. Run the frontend application in development mode:
 
-- Detailed project setup instructions.
-- Step-by-step guides to run the frontend application.
-- Step-by-step guides to run the backend server.
-- Description of all required environment variables.
-- Summary of design decisions and architecture.
-- List of assumptions made during development.
+   ```bash
+   pnpm --dir apps/web run dev
+   ```
 
----
-
-## 5. Bonus Features (Optional)
-
-If time permits, the following optional features can be implemented:
-
-- **Authentication**: Dummy username-based login.
-- **Typing Indicator**: Show when another user is typing.
-- **User Status**: Display online/offline indicators for users.
-- **Message Status**: Show read/delivered status for messages.
-- **Database**: Persist messages in a database (e.g., MongoDB, SQLite, PostgreSQL).
-- **Deployment**: Deploy the backend to a cloud hosting platform (e.g., Render, Railway) and provide the live API URL.
+4. Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
 
 ---
 
-## 🛡️ Submission & Deadline
+## 3. How to Start Backend
 
-Please submit:
+1. Populate the backend environment variables:
+   Create a `.env` file in `apps/server/` using the template below (see Section 4).
 
-1. **GitHub Repository**: Link to the public or shared repository.
-2. **Application Demo**:
-   - An **APK file** (if React Native is used).
-   - A **Screen Recording** of the working application (shared via Google Drive link) if an APK cannot be built.
-3. **Setup Guide**: Completed README with instructions.
+2. Apply database schemas / run Drizzle push to synchronize tables with Neon PostgreSQL:
 
-⏰ **Deadline**: 24 hours.
+   ```bash
+   pnpm --dir apps/server exec drizzle-kit push
+   ```
+
+3. Start the Express & Socket.io server in development mode:
+   ```bash
+   pnpm --dir apps/server run dev
+   ```
+   The backend server will run at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 4. Environment Variables Templates
+
+### Frontend Env Template
+
+Save this as `apps/web/.env`:
+
+```env
+# URL where the Express + Socket.io server is running
+VITE_BACKEND-URL=http://localhost:3000
+```
+
+### Backend Env Template
+
+Save this as `apps/server/.env`:
+
+```env
+# Neon PostgreSQL Connection URL
+DATABASE_URL=postgresql://user:pass@host/db
+
+# Better Auth Secret Token
+BETTER_AUTH_SECRET=your_random_auth_secret_here
+
+# Better Auth Base Address
+BETTER_AUTH_URL=http://localhost:3000
+
+# Client Application URL
+FRONTEND_URL=http://localhost:5173
+
+# Google OAuth credentials
+GOOGLE_CLIENT_ID=your_google_client_id_here.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+```
+
+---
+
+## 5. Features
+
+- **Google Social Authentication**: Safe login flow utilizing Better Auth library and Google SSO.
+- **Real-Time Messaging**: Deliver and receive direct chat messages instantly over Socket.io.
+- **Online/Offline Tracking**: Visual indicator badges on avatars display active statuses synced automatically through connection socket heartbeats.
+- **Persistent Message Store**: Messages are saved in a Neon serverless PostgreSQL database using Drizzle ORM before broadcasting, eliminating client synchronization races.
+- **Unified Mobile Layout**: Standardized layout resets margins and features responsive viewport heights (`min-h-screen`) to prevent squishing or clipping on mobile emulation.
+- **Integrated Sidebar Menu**: A mobile drawer trigger button integrated directly into active subpage headers (chat and profile settings) allows drawer navigation on mobile viewports.

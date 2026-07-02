@@ -33,7 +33,7 @@ export default function Auth() {
         {/* Left Side: Auth Logic Control Panel */}
         <div className="md:col-span-6 flex flex-col justify-center items-center min-h-screen md:min-h-0 md:h-full p-8 md:p-16 lg:p-24 relative w-full">
           {/* Subtle dotted matrix pattern overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808007_1px,transparent_1px),linear-gradient(to_bottom,#80808007_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808007_1px,transparent_1px),linear-gradient(to_bottom,#80808007_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
 
           {/* Top Brand Logo */}
           <div className="absolute top-8 left-8 md:top-12 md:left-12 flex items-center space-x-3">
