@@ -1,8 +1,7 @@
 import { integer, pgTable, varchar } from 'drizzle-orm/pg-core';
 
-export const usersTable = pgTable('users', {
+export const chat = pgTable('chat', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  name: varchar({ length: 255 }).notNull(),
-  age: integer().notNull(),
-  email: varchar({ length: 255 }).notNull().unique(),
+  message: varchar({ length: 255 }).notNull(),
+  sender: varchar({ length: 255 }).notNull(),
 });

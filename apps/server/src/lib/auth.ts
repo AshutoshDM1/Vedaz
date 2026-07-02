@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import db from '../utils/db.js';
 import { origins } from '@/utils/origins.js';
+import * as authSchema from '../db/auth-schema.js';
 
 const isProduction = process.env.BETTER_AUTH_URL === 'https://xcontext-backend.elitedev.space';
 
@@ -25,9 +26,11 @@ export const auth = betterAuth({
       maxAge: 60 * 60, // 1 hour
     },
   },
-  google: {
-    clientId: process.env.GOOGLE_CLIENT_ID as string,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
   },
   onError: (error: any) => {
     console.error('Better Auth Error:', error.message);
@@ -37,5 +40,5 @@ export const auth = betterAuth({
       redirect: process.env.FRONTEND_URL,
     };
   },
-  database: drizzleAdapter(db, { provider: 'pg' }),
+  database: drizzleAdapter(db, { provider: 'pg', schema: authSchema }),
 });
