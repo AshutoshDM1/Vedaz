@@ -1,14 +1,25 @@
 import { authClient } from '@/lib/auth-client';
-import { User, Mail, ShieldCheck, Info, Calendar, Lock } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { User, Mail, ShieldCheck, Info, Calendar, Lock, Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 export default function Profile() {
   const { data: session } = authClient.useSession();
+  const { setMobileMenuOpen } = useOutletContext<{ setMobileMenuOpen: (open: boolean) => void }>();
 
   return (
     <div className="flex-1 flex flex-col h-full bg-zinc-900/5 backdrop-blur-sm overflow-y-auto">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-zinc-800 bg-zinc-950/40">
+      <header className="px-6 py-4 border-b border-zinc-800 bg-zinc-950/40 flex items-center">
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="md:hidden text-zinc-400 hover:text-zinc-100 mr-3 cursor-pointer"
+          onClick={() => setMobileMenuOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
         <div>
           <h1 className="text-sm font-semibold text-zinc-200">User Profile</h1>
           <p className="text-[10px] text-zinc-500">

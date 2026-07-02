@@ -121,6 +121,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body,
+  #root {
+    background-color: oklch(0.145 0 0); /* dark theme fallback bg-zinc-950 */
+  }
   body {
     @apply bg-background text-foreground;
   }

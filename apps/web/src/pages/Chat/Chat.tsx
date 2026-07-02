@@ -6,7 +6,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useUsersQuery } from '@/hooks/useUsers';
 import { useMessagesQuery, useSendMessageMutation } from '@/hooks/useMessages';
 import type { MessageData } from '@/hooks/useMessages';
-import { Send, MessageSquare, Loader2 } from 'lucide-react';
+import { Send, MessageSquare, Loader2, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,11 @@ export default function Chat() {
   const userId = searchParams.get('userid');
   const queryClient = useQueryClient();
 
-  // Read online status map from the Dashboard Layout context
-  const { onlineUsers } = useOutletContext<{ onlineUsers: string[] }>();
+  // Read online status map and mobile drawer toggler from context
+  const { onlineUsers, setMobileMenuOpen } = useOutletContext<{
+    onlineUsers: string[];
+    setMobileMenuOpen: (open: boolean) => void;
+  }>();
 
   // Shared state: Socket.io client and users list
   const socket = useSocket();
@@ -82,17 +85,35 @@ export default function Chat() {
   // Render placeholder if no user selected
   if (!userId || !selectedUser) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-zinc-950/10 text-center p-6 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none" />
-        <div className="max-w-md space-y-4 relative z-10 flex flex-col items-center">
-          <div className="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-xl">
-            <MessageSquare className="h-7 w-7 text-indigo-400" />
+      <div className="h-full w-full flex flex-col bg-zinc-900/5 backdrop-blur-sm z-10 overflow-hidden relative">
+        {/* Mobile Header (only visible when no chat is active to allow opening menu) */}
+        <header className="md:hidden flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/40">
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="text-zinc-400 hover:text-zinc-100 cursor-pointer"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <img src="/favicon.svg" alt="Vedaz Logo" className="h-6 w-6 object-contain" />
+            <span className="text-sm font-bold tracking-wider text-white">VEDAZ</span>
           </div>
-          <h2 className="text-lg font-semibold text-zinc-200">Start a Conversation</h2>
-          <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
-            Select a direct message channel from the sidebar list to start exchanging encrypted
-            real-time messages.
-          </p>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center bg-zinc-955/10 text-center p-6 relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none" />
+          <div className="max-w-md space-y-4 relative z-10 flex flex-col items-center">
+            <div className="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-xl">
+              <MessageSquare className="h-7 w-7 text-indigo-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-zinc-200">Start a Conversation</h2>
+            <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
+              Select a direct message channel from the sidebar list to start exchanging encrypted
+              real-time messages.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -103,6 +124,14 @@ export default function Chat() {
       {/* Top Header bar */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/40">
         <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="md:hidden text-zinc-400 hover:text-zinc-100 mr-2 cursor-pointer"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <div className="relative">
             <Avatar className="h-8.5 w-8.5 border border-zinc-800">
               <AvatarImage src={selectedUser.image || undefined} />
@@ -145,17 +174,18 @@ export default function Chat() {
         ) : (
           currentChatMessages.map((msg) => {
             const isMe = msg.senderId === session?.user?.id;
+            const messageSender = isMe ? session?.user : users.find((u) => u.id === msg.senderId);
+            const senderName = isMe ? 'You' : messageSender?.name || 'User';
+
             return (
               <div
                 key={msg.id}
                 className="flex items-start space-x-3 animate-in fade-in zoom-in duration-200"
               >
                 <Avatar className="h-8.5 w-8.5 border border-zinc-850 mt-0.5">
-                  <AvatarImage
-                    src={(isMe ? session?.user?.image : selectedUser.image) || undefined}
-                  />
+                  <AvatarImage src={messageSender?.image || undefined} />
                   <AvatarFallback className="bg-indigo-950 text-indigo-400 text-xs font-semibold">
-                    {(isMe ? session?.user?.name : selectedUser.name).substring(0, 2).toUpperCase()}
+                    {senderName.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0 space-y-1">
@@ -163,7 +193,7 @@ export default function Chat() {
                     <span
                       className={`text-xs font-semibold ${isMe ? 'text-indigo-400' : 'text-zinc-200'}`}
                     >
-                      {isMe ? 'You' : selectedUser.name}
+                      {senderName}
                     </span>
                     <span className="text-[9px] text-zinc-650">
                       {new Date(msg.createdAt).toLocaleTimeString([], {

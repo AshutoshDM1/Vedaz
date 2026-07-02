@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Auth() {
@@ -23,28 +23,35 @@ export default function Auth() {
   };
 
   return (
-    <div className="h-screen w-full bg-zinc-950 text-zinc-100 flex font-sans overflow-hidden select-none">
+    <div className="min-h-screen md:h-screen w-full bg-zinc-950 text-zinc-100 font-sans overflow-hidden select-none relative">
       {/* Background glow effects */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-violet-600/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-violet-650/5 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Main Container: Split-screen Grid (full height and width, no outer rounded corners) */}
-      <div className="w-full h-full grid grid-cols-1 md:grid-cols-12 bg-zinc-950 relative z-10 overflow-hidden p-0 gap-0">
-        {/* Left Side: Auth Logic Control Panel (6 cols on md) */}
-        <div className="md:col-span-6 flex flex-col justify-center items-center p-8 md:p-16 lg:p-24 relative h-full w-full">
+      {/* Main Container: Split-screen Grid */}
+      <div className="w-full min-h-screen md:h-full grid grid-cols-1 md:grid-cols-12 bg-zinc-950 relative z-10 p-0 gap-0">
+        {/* Left Side: Auth Logic Control Panel */}
+        <div className="md:col-span-6 flex flex-col justify-center items-center min-h-screen md:min-h-0 md:h-full p-8 md:p-16 lg:p-24 relative w-full">
+          {/* Subtle dotted matrix pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808007_1px,transparent_1px),linear-gradient(to_bottom,#80808007_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
           {/* Top Brand Logo */}
           <div className="absolute top-8 left-8 md:top-12 md:left-12 flex items-center space-x-3">
-            <img src="/favicon.svg" alt="Vedaz Logo" className="size-6 object-contain" />
-            <span className="text-lg font-bold tracking-wider bg-linear-to-b from-white to-zinc-300 bg-clip-text text-transparent">
+            <img src="/favicon.svg" alt="Vedaz Logo" className="size-6 object-contain " />
+            <span className="text-base font-semibold tracking-wider bg-linear-to-b from-white to-zinc-400 bg-clip-text text-transparent">
               VEDAZ Chat
             </span>
           </div>
 
           {/* Central SSO Panel */}
-          <div className="space-y-8 max-w-md w-full flex flex-col items-center text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h2>
-              <p className="text-sm text-zinc-400">Your conversations are waiting.</p>
+          <div className="space-y-8 max-w-sm w-full flex flex-col items-center text-center relative z-10">
+            <div className="space-y-2 flex flex-col items-start w-full text-left">
+              <h2 className="text-3xl font-bold tracking-tight bg-linear-to-b from-white to-zinc-300 bg-clip-text text-transparent">
+                Sign in to Vedaz Chat
+              </h2>
+              <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase mt-1">
+                Connect with:
+              </p>
             </div>
 
             {/* Google OAuth Button */}
@@ -54,13 +61,13 @@ export default function Auth() {
                 disabled={signingIn}
                 variant="outline"
                 size="lg"
-                className="py-5 px-8 rounded-md font-semibold text-sm flex items-center justify-center bg-white hover:bg-zinc-100 text-zinc-950 shadow-md transition-all duration-300 hover:shadow-indigo-500/10 active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none border-zinc-200"
+                className="py-6 px-8 w-full rounded-xl font-semibold text-xs flex items-center justify-center bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white shadow-2xl transition-all duration-300 hover:shadow-indigo-500/5 active:scale-98 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 {signingIn ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-zinc-800 mr-2" />
+                  <Loader className="h-4.5 w-4.5 animate-spin text-zinc-400 mr-2.5" />
                 ) : (
                   <svg
-                    className="w-5 h-5 mr-3 shrink-0"
+                    className="w-4.5 h-4.5 mr-2.5 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -83,13 +90,18 @@ export default function Auth() {
                     />
                   </svg>
                 )}
-                <span className="text-zinc-950">
-                  {signingIn ? 'Signing you up...' : 'Sign Up with Google'}
-                </span>
+                <span>{signingIn ? 'loading...' : 'Continue with Google'}</span>
               </Button>
 
+              <p className="text-[11px] text-zinc-550 w-full text-left leading-normal">
+                New here?{' '}
+                <span className="text-zinc-350 font-medium">
+                  Signing in with Google creates your account.
+                </span>
+              </p>
+
               {errorMsg && (
-                <div className="flex items-start space-x-2 text-xs text-red-400 bg-red-950/20 border border-red-900/50 p-4 rounded-xl animate-in fade-in duration-300">
+                <div className="flex items-start space-x-2 text-[11px] text-red-400 bg-red-950/20 border border-red-900/50 p-4 rounded-xl animate-in fade-in duration-300 w-full text-left">
                   <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
@@ -98,21 +110,21 @@ export default function Auth() {
           </div>
 
           {/* Bottom compliance terms */}
-          <div className="absolute bottom-8 text-center text-[10px] text-zinc-500">
-            Secured link. Powered by Better Auth & Enterprise Single Sign-On.
+          <div className="absolute bottom-8 text-center text-[9px] text-zinc-650 tracking-wider">
+            SECURED ENDPOINT. POWERED BY BETTER AUTH & SSO.
           </div>
         </div>
 
-        {/* Right Side: Image Illustration with rounded corners (6 cols on md) */}
+        {/* Right Side: Image Illustration with rounded corners */}
         <div className="md:col-span-6 relative hidden md:block p-6 h-full w-full">
-          <div className="relative h-full w-full rounded-[2rem] overflow-hidden bg-zinc-950 border border-zinc-800/80">
+          <div className="relative h-full w-full rounded-[2.5rem] overflow-hidden bg-zinc-950 border border-zinc-800/80">
             <img
               src="/auth-hero.png"
               alt="Vedaz Sunset Terraces Illustration"
-              className="w-full h-full object-cover object-center absolute inset-0 select-none pointer-events-none scale-100 hover:scale-105 transition-transform duration-1000"
+              className="w-full h-full object-cover object-center absolute inset-0 select-none pointer-events-none scale-100 hover:scale-103 transition-transform duration-1000"
             />
             {/* subtle gradient over the image */}
-            <div className="absolute inset-0 bg-linear-to-t from-zinc-950/30 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-t from-zinc-950/40 via-transparent to-transparent pointer-events-none" />
           </div>
         </div>
       </div>
