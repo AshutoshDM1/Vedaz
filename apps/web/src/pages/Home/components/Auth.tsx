@@ -44,7 +44,7 @@ export default function Auth() {
           <div className="space-y-8 max-w-md w-full flex flex-col items-center text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-semibold tracking-tight text-white">Welcome back</h2>
-              <p className="text-sm text-zinc-400">Log in to access your secure workspace.</p>
+              <p className="text-sm text-zinc-400">Your conversations are waiting.</p>
             </div>
 
             {/* Google OAuth Button */}
@@ -84,7 +84,7 @@ export default function Auth() {
                   </svg>
                 )}
                 <span className="text-zinc-950">
-                  {signingIn ? 'Authenticating...' : 'Log in with Google'}
+                  {signingIn ? 'Signing you up...' : 'Sign Up with Google'}
                 </span>
               </Button>
 

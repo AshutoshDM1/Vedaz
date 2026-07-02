@@ -1,7 +1,21 @@
-import { integer, pgTable, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
+import { user } from './auth-schema.js';
 
-export const chat = pgTable('chat', {
-  id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  message: varchar({ length: 255 }).notNull(),
-  sender: varchar({ length: 255 }).notNull(),
-});
+export const message = pgTable(
+  'message',
+  {
+    id: text('id').primaryKey(),
+    senderId: text('sender_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    receiverId: text('receiver_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('message_senderId_idx').on(table.senderId),
+    index('message_receiverId_idx').on(table.receiverId),
+  ],
+);
