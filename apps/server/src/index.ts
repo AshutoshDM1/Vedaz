@@ -7,6 +7,9 @@ import router from './routes/router.js';
 import { origins } from './utils/origins.js';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './lib/auth.js';
+import db from './utils/db.js';
+import { message } from './db/schema.js';
+import { and, eq } from 'drizzle-orm';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -66,6 +69,29 @@ io.on('connection', (socket) => {
 
     // Broadcast status change to all clients
     io.emit('user_status', { userId, online: true });
+  });
+
+  socket.on('typing', ({ senderId, receiverId, isTyping }) => {
+    const recipientSocketId = userSockets.get(receiverId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit('user_typing', { senderId, isTyping });
+    }
+  });
+
+  socket.on('read_all_messages', async ({ senderId, receiverId }) => {
+    try {
+      await db
+        .update(message)
+        .set({ status: 'read' })
+        .where(and(eq(message.senderId, senderId), eq(message.receiverId, receiverId)));
+
+      const senderSocketId = userSockets.get(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit('all_messages_read', { readerId: receiverId });
+      }
+    } catch (err) {
+      console.error('Error marking messages as read:', err);
+    }
   });
 
   socket.on('disconnect', () => {

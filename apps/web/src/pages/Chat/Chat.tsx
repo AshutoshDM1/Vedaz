@@ -6,7 +6,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useUsersQuery } from '@/hooks/useUsers';
 import { useMessagesQuery, useSendMessageMutation } from '@/hooks/useMessages';
 import type { MessageData } from '@/hooks/useMessages';
-import { Send, MessageSquare, Loader2, Menu } from 'lucide-react';
+import { Send, MessageSquare, Loader2, Menu, List, Check, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -32,16 +32,37 @@ export default function Chat() {
   const sendMessageMutation = useSendMessageMutation();
 
   const [inputValue, setInputValue] = useState('');
+  const [targetIsTyping, setTargetIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Handle incoming real-time messages via the shared socket client
+  // Mark all messages as read on entry / user selection
+  useEffect(() => {
+    if (!socket || !session?.user?.id || !userId) return;
+
+    socket.emit('read_all_messages', {
+      senderId: userId,
+      receiverId: session.user.id,
+    });
+
+    setTargetIsTyping(false);
+  }, [socket, userId, session?.user?.id]);
+
+  // Handle incoming real-time messages & updates via the shared socket client
   useEffect(() => {
     if (!socket || !session?.user?.id) return;
 
     const handleNewMessage = (msg: MessageData) => {
-      // Find which conversation this message belongs to
       const convoId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId;
 
-      // Manually update TanStack Query cache data for this conversation
+      // If we are currently active in this chat and receive a message from the target user, mark it as read immediately
+      if (msg.senderId === userId) {
+        msg.status = 'read';
+        socket.emit('read_all_messages', {
+          senderId: userId,
+          receiverId: session.user.id,
+        });
+      }
+
       queryClient.setQueryData<MessageData[]>(['messages', convoId], (oldMessages) => {
         if (!oldMessages) return [msg];
         if (oldMessages.some((m) => m.id === msg.id)) return oldMessages;
@@ -49,15 +70,58 @@ export default function Chat() {
       });
     };
 
+    const handleUserTyping = ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
+      if (senderId === userId) {
+        setTargetIsTyping(isTyping);
+      }
+    };
+
+    const handleAllMessagesRead = ({ readerId }: { readerId: string }) => {
+      if (readerId === userId) {
+        queryClient.setQueryData<MessageData[]>(['messages', userId], (oldMessages) => {
+          if (!oldMessages) return [];
+          return oldMessages.map((m) => ({ ...m, status: 'read' as const }));
+        });
+      }
+    };
+
     socket.on('new_message', handleNewMessage);
+    socket.on('user_typing', handleUserTyping);
+    socket.on('all_messages_read', handleAllMessagesRead);
 
     return () => {
       socket.off('new_message', handleNewMessage);
+      socket.off('user_typing', handleUserTyping);
+      socket.off('all_messages_read', handleAllMessagesRead);
     };
-  }, [socket, session?.user?.id, queryClient]);
+  }, [socket, session?.user?.id, userId, queryClient]);
 
   const selectedUser = users.find((u) => u.id === userId);
   const isOnline = selectedUser ? onlineUsers.includes(selectedUser.id) : false;
+
+  const handleInputChange = (val: string) => {
+    setInputValue(val);
+
+    if (!socket || !session?.user?.id || !userId) return;
+
+    socket.emit('typing', {
+      senderId: session.user.id,
+      receiverId: userId,
+      isTyping: true,
+    });
+
+    if (typingTimeout) clearTimeout(typingTimeout);
+
+    const timeout = setTimeout(() => {
+      socket.emit('typing', {
+        senderId: session.user.id,
+        receiverId: userId,
+        isTyping: false,
+      });
+    }, 2000);
+
+    setTypingTimeout(timeout);
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +129,16 @@ export default function Chat() {
 
     const textToSend = inputValue;
     setInputValue('');
+
+    // Emit stop typing immediately
+    if (socket && session?.user?.id) {
+      if (typingTimeout) clearTimeout(typingTimeout);
+      socket.emit('typing', {
+        senderId: session.user.id,
+        receiverId: userId,
+        isTyping: false,
+      });
+    }
 
     // Trigger TanStack Query mutation
     sendMessageMutation.mutate({
@@ -130,7 +204,7 @@ export default function Chat() {
             className="md:hidden text-zinc-400 hover:text-zinc-100 mr-2 cursor-pointer"
             onClick={() => setMobileMenuOpen(true)}
           >
-            <Menu className="h-5 w-5" />
+            <List className="size-5" />
           </Button>
           <div className="relative">
             <Avatar className="h-8.5 w-8.5 border border-zinc-800">
@@ -146,7 +220,9 @@ export default function Chat() {
           <div>
             <h1 className="text-sm font-semibold text-zinc-200">{selectedUser.name}</h1>
             <p className="text-[10px] text-zinc-500 mt-0.5">
-              {isOnline ? (
+              {targetIsTyping ? (
+                <span className="text-indigo-400 font-medium animate-pulse">Typing...</span>
+              ) : isOnline ? (
                 <span className="text-emerald-400 font-medium">Online</span>
               ) : (
                 <span>Offline</span>
@@ -195,11 +271,22 @@ export default function Chat() {
                     >
                       {senderName}
                     </span>
-                    <span className="text-[9px] text-zinc-650">
+                    <span className="text-[9px] text-zinc-650 flex items-center gap-1">
                       {new Date(msg.createdAt).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
+                      {isMe && (
+                        <span>
+                          {msg.status === 'read' ? (
+                            <CheckCheck className="h-3 w-3 text-emerald-500 inline" />
+                          ) : msg.status === 'delivered' ? (
+                            <CheckCheck className="h-3 w-3 text-zinc-500 inline" />
+                          ) : (
+                            <Check className="h-3 w-3 text-zinc-500 inline" />
+                          )}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div
@@ -223,7 +310,7 @@ export default function Chat() {
         <form onSubmit={handleSendMessage} className="flex gap-2 max-w-4xl mx-auto">
           <Input
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             placeholder={`Message ${selectedUser.name}...`}
             className="flex-1 bg-zinc-900 border-transparent focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-200 rounded-xl h-11 px-4 text-sm shadow-none outline-none border-0 ring-0 ring-offset-0"
           />

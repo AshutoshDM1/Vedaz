@@ -12,6 +12,7 @@ export const message = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
+    status: text('status').$type<'sent' | 'delivered' | 'read'>().default('sent').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [

@@ -6,6 +6,7 @@ export interface MessageData {
   senderId: string;
   receiverId: string;
   content: string;
+  status: 'sent' | 'delivered' | 'read';
   createdAt: string;
 }
 

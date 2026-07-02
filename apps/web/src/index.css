@@ -121,15 +121,33 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html,
-  body,
-  #root {
-    background-color: oklch(0.145 0 0); /* dark theme fallback bg-zinc-950 */
-  }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+    color-scheme: dark;
   }
+}
+
+/* Custom Dark Scrollbar styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(9, 9, 11, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(82, 82, 91, 0.3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(82, 82, 91, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(82, 82, 91, 0.3) rgba(9, 9, 11, 0.2);
 }

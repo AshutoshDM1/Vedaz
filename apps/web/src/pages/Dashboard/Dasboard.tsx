@@ -3,7 +3,7 @@ import { authClient } from '@/lib/auth-client';
 import { useNavigate, Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { useSocket } from '@/hooks/useSocket';
 import { useUsersQuery } from '@/hooks/useUsers';
-import { LogOut, User, Loader2 } from 'lucide-react';
+import { LogOut, User, Loader2, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -63,7 +63,7 @@ export default function Dasboard() {
   const filteredUsers = users.filter((u) => u.id !== session?.user?.id);
 
   return (
-    <div className="flex h-screen w-full bg-zinc-950 text-zinc-100 font-sans overflow-hidden select-none">
+    <div className="flex h-screen w-full relative bg-zinc-950 text-zinc-100 font-sans overflow-hidden select-none">
       {/* Background glow effects */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-violet-600/5 rounded-full blur-[120px] pointer-events-none" />
@@ -74,7 +74,7 @@ export default function Dasboard() {
         <div className="flex items-center space-x-3 p-[20.5px] border-b border-zinc-800/80">
           <img src="/favicon.svg" alt="Vedaz Logo" className="h-7 w-7 object-contain" />
           <span className="text-lg font-bold tracking-wider bg-linear-to-b from-white to-zinc-300 bg-clip-text text-transparent">
-            VEDAZ
+            VEDAZ Chat
           </span>
         </div>
 
@@ -88,7 +88,7 @@ export default function Dasboard() {
 
             {loadingUsers ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-zinc-650" />
+                <Loader className="h-5 w-5 animate-spin text-zinc-650" />
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-xs text-zinc-600 text-center py-4">No other users active</div>

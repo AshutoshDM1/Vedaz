@@ -20,6 +20,22 @@ export const getMessages = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
+  // Update target user's messages to 'read' if they are for the current user
+  await db
+    .update(message)
+    .set({ status: 'read' })
+    .where(and(eq(message.senderId, targetUserId), eq(message.receiverId, session.user.id)));
+
+  // Notify sender that reader (session.user.id) has read all their messages
+  const io = req.app.get('io');
+  const userSockets = req.app.get('userSockets');
+  if (io && userSockets) {
+    const senderSocketId = userSockets.get(targetUserId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit('all_messages_read', { readerId: session.user.id });
+    }
+  }
+
   const history = await db
     .select()
     .from(message)
@@ -48,6 +64,11 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
+  const io = req.app.get('io');
+  const userSockets = req.app.get('userSockets');
+  const isOnline = userSockets && userSockets.has(receiverId);
+  const initialStatus = isOnline ? 'delivered' : 'sent';
+
   // Insert into Neon database
   const [newMsg] = await db
     .insert(message)
@@ -56,14 +77,12 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
       senderId: session.user.id,
       receiverId,
       content,
+      status: initialStatus,
     })
     .returning();
 
   // Push to Socket.io connection if recipient is connected
-  const io = req.app.get('io');
-  const userSockets = req.app.get('userSockets');
-
-  if (io && userSockets) {
+  if (io && isOnline) {
     const recipientSocketId = userSockets.get(receiverId);
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('new_message', newMsg);
